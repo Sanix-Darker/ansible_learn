@@ -1,4 +1,9 @@
 ---
+# To set roles for down steps
+# ansible-galaxy init spark_master
+# ansible-galaxy init splunk.splunk
+# ansible-galaxy init geerlingguy.jenkins
+
 - name: Install and configure dependencies
   hosts: all
   become: true
@@ -9,9 +14,10 @@
         state: latest
       when: ansible_distribution == 'Rocky' and ansible_distribution_major_version == '9'
 
+    # Set firewall ports
     - name: Open firewall ports for necessary services
       firewalld:
-        port: "{{ item }}"
+        port: "{{ item }}/tcp"
         state: enabled
         immediate: yes
       loop:
@@ -23,23 +29,25 @@
         - 5432  # PostgreSQL
 
     # Install and config JaVa
-    - name: Install OpenJDK 17
-      package:
-        name: java-17-openjdk
+    - name: Install OpenJDK
+      yum:
+        name: java-1.8.0-openjdk
         state: present
-    - name: Set JAVA_HOME for OpenJDK 17
+    - name: Set JAVA_HOME for OpenJDK
       lineinfile:
         dest: /etc/environment
-        line: 'JAVA_HOME=/usr/lib/jvm/java-17-openjdk'
+        line: 'JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.402.b06-1.el7_9.x86_64/'
         state: present
       become: true
 
+    # Install and config python3
     - name: Install Python 3.11
-      package:
-        name: python3.11
+      yum:
+        name: [epel-release, yum-utils, python3, python2]
         state: present
 
     # Install and configure Splunk
+    # TODO: fix this  + configurations
     - name: Install Splunk
       include_role:
         name: splunk.splunk
@@ -49,7 +57,7 @@
         enabled: yes
         state: started
 
-    # Example: Install and configure Jenkins
+    # Install and configure Jenkins
     - name: Install Jenkins
       include_role:
         name: geerlingguy.jenkins
@@ -60,6 +68,7 @@
         state: started
 
     # Install and configure Spark Master
+    # TODO: fix this  + configurations
     - name: Install Spark Master
       yum:
         name: spark-master
@@ -92,6 +101,9 @@
         name: spark-worker
         state: started
         enabled: yes
+
+    # Install and configure Spark Worker
+    # TODO: fix this  + configurations
     - name: Install Spark Driver
       yum:
         name: spark-driver
