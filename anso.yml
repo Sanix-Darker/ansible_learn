@@ -58,14 +58,21 @@
         state: started
 
     # Install and configure Jenkins
-    - name: Install Jenkins
-      include_role:
-        name: geerlingguy.jenkins
-    - name: Enable Jenkins to start on boot
-      service:
+    - name: Add Jenkins repository key
+      rpm_key:
+        state: present
+        key: https://pkg.jenkins.io/redhat/jenkins.io.key
+    - name: Add Jenkins repository
+      yum_repository:
         name: jenkins
+        description: Jenkins Official Repository
+        baseurl: https://pkg.jenkins.io/redhat-stable
+        gpgcheck: yes
         enabled: yes
-        state: started
+    - name: Install Jenkins
+      package:
+        name: jenkins
+        state: present
 
     # Install and configure Spark Master
     # TODO: fix this  + configurations
