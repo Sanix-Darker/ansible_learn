@@ -1,0 +1,129 @@
+---
+- name: Install and configure dependencies
+  hosts: all
+  become: true
+  tasks:
+    - name: Install security updates on Rocky Linux 9
+      yum:
+        name: '*'
+        state: latest
+      when: ansible_distribution == 'Rocky' and ansible_distribution_major_version == '9'
+
+    - name: Open firewall ports for necessary services
+      firewalld:
+        port: "{{ item }}"
+        state: enabled
+        immediate: yes
+      loop:
+        - 8080  # Jenkins
+        - 9997  # Splunk forwarder data
+        - 50070 # Spark Master web UI
+        - 7077  # Spark Master RPC
+        - 8081  # Spark Worker web UI
+        - 5432  # PostgreSQL
+
+    # Install and config JaVa
+    - name: Install OpenJDK 17
+      package:
+        name: java-17-openjdk
+        state: present
+    - name: Set JAVA_HOME for OpenJDK 17
+      lineinfile:
+        dest: /etc/environment
+        line: 'JAVA_HOME=/usr/lib/jvm/java-17-openjdk'
+        state: present
+      become: true
+
+    - name: Install Python 3.11
+      package:
+        name: python3.11
+        state: present
+
+    # Install and configure Splunk
+    - name: Install Splunk
+      include_role:
+        name: splunk.splunk
+    - name: Enable Splunk to start on boot
+      service:
+        name: splunk
+        enabled: yes
+        state: started
+
+    # Example: Install and configure Jenkins
+    - name: Install Jenkins
+      include_role:
+        name: geerlingguy.jenkins
+    - name: Enable Jenkins to start on boot
+      service:
+        name: jenkins
+        enabled: yes
+        state: started
+
+    # Install and configure Spark Master
+    - name: Install Spark Master
+      yum:
+        name: spark-master
+        state: present
+    - name: Configure Spark Master
+      template:
+        src: spark-master.conf.j2
+        dest: /etc/spark/spark-master.conf
+      notify:
+        - restart spark master
+    - name: Start Spark Master as systemd service
+      systemd:
+        name: spark-master
+        state: started
+        enabled: yes
+
+    # Install and configure Spark Worker
+    - name: Install Spark Worker
+      yum:
+        name: spark-worker
+        state: present
+    - name: Configure Spark Worker
+      template:
+        src: spark-worker.conf.j2
+        dest: /etc/spark/spark-worker.conf
+      notify:
+        - restart spark worker
+    - name: Start Spark Worker as systemd service
+      systemd:
+        name: spark-worker
+        state: started
+        enabled: yes
+    - name: Install Spark Driver
+      yum:
+        name: spark-driver
+        state: present
+    - name: Configure Spark Driver
+      template:
+        src: spark-driver.conf.j2
+        dest: /etc/spark/spark-driver.conf
+
+    # Install and configure PostgreSQL
+    - name: Install PostgreSQL
+      yum:
+        name: postgresql
+        state: present
+    - name: Configure PostgreSQL
+      template:
+        src: postgresql.conf.j2
+        dest: /etc/postgresql/postgresql.conf
+      notify:
+        - restart postgresql
+    - name: Create user with all privileges on all databases
+      postgresql_user:
+        name: admin_user
+        password: "{{ admin_user_password }}"
+        priv: "*.*:ALL"
+    - name: Create user with read-only privileges on all databases
+      postgresql_user:
+        name: read_only_user
+        password: "{{ read_only_user_password }}"
+        priv: "*.*:SELECT"
+    - name: Start PostgreSQL as systemd service
+      systemd:
+        name: postgresql
+        state: started
+        enabled: yes
