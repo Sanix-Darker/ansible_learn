@@ -239,3 +239,52 @@ In case of the error :
 FAILED! => {"msg": "Using a SSH password instead of a key is not possible because Host Key checking is enabled and sshpass does not support this.  Please add this host's fingerprint to your known_hosts file to manage this host."}
 ```
 we need to ssh root@.... first to set keys that ansible is going to use.
+
+## PUBLIC KEY AND NOT SSH PASSWORKD (--ask-pass)
+
+Instead of hitting everytime the ssh password
+We need to try to connect with the ssh public key
+
+- Generate the ssh key on the master node:
+```bash
+root@master:~# ssh-keygen -t rsa -C "name@example.org"
+```
+
+- Then copy your public key to the servers with ssh-copy-id:
+```bash
+root@master:~# ssh-copy-id user@child1.dev
+root@master:~# ssh-copy-id user@child2.dev
+```
+
+Considering authentification, we can also use *sshpass*:
+
+```
+# install from EPEL
+[root@dlp ~]# yum --enablerepo=epel -y install sshpass
+[2] 	How to use SSHPass.
+# -p password : from argument
+
+[cent@dlp ~]$ sshpass -p password ssh 10.0.0.51 hostname
+node01.srv.world
+
+# -f file : from file
+
+[cent@dlp ~]$ echo 'password' > sshpass.txt
+[cent@dlp ~]$ chmod 600 sshpass.txt
+[cent@dlp ~]$ sshpass -f sshpass.txt ssh 10.0.0.51 hostname
+
+node01.srv.world
+# -e : from env variable
+
+[cent@dlp ~]$ export SSHPASS=password
+[cent@dlp ~]$ sshpass -e ssh 10.0.0.51 hostname
+node01.srv.world
+```
+
+## BONUS
+
+To ping all the machines :
+```bash
+ansible -m ping all
+```
+
