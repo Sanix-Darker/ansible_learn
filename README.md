@@ -7,8 +7,15 @@ List of resources:
 
 - https://www.youtube.com/watch?v=BS0GLQaSGPo (Ansible tutorial).
 
+## LEARN MAP
 
-## INTRO
+![map](./ansible.svg)
+
+[CHECK THE INTERACTIVE MAP](https://sanix-darker.github.io/ansible_learn/ansible.html)
+
+## CONCEPTS
+
+### INTRO
 
 Ansible helps automating tasks when we have a set of
 multiple servers and we want to automate
@@ -26,8 +33,7 @@ In the domain of sync conf we have two global mode of doing so:
 
 > ANSIBLE is a **PUSH CONFIGURATION** type.
 
-
-## HOW DOES IT WORKS
+### HOW DOES IT WORKS
 
 The local machine ssh into all the nodes clients and has a list of playbooks.
 
@@ -35,7 +41,6 @@ playbooks are the core of ansible
 Example of a yaml ansible configuration file :
 
 ```yaml
-
 - name: player1
   hosts: webserver
   tasks:
@@ -75,7 +80,7 @@ web2.manachine
 db1.manachine
 ```
 
-## USE CASE
+### USE CASE
 
 **NOTE:** Don't forget to `export TERM=xterm`
 
@@ -133,8 +138,7 @@ sudo firewall-cmd --reload
 sudo firewall-cmd --list-all
 ```
 
-
-TO generate the ansible vault password, we just need to run :
+To generate the ansible vault password, we just need to run :
 ```bash
 echo "root" > password.txt
 ansible-vault encrypt ./password.txt # to encrypt the password
@@ -189,10 +193,10 @@ servers:
 ```
 the ansible_password is the content of password.txt
 
-# with this command, we should provide ssh password asked to run the playbook
+#### with this command, we should provide ssh password asked to run the playbook
 ansible-playbook -i ./inventory.ini --ask-pass ./playbook.yml
 
-# Complete playbook for postgresql for example:
+#### Complete playbook for postgresql for example:
 ```yaml
 ---
 - name: Install and configure PostgreSQL on CentOS
@@ -240,7 +244,7 @@ FAILED! => {"msg": "Using a SSH password instead of a key is not possible becaus
 ```
 we need to ssh root@.... first to set keys that ansible is going to use.
 
-## PUBLIC KEY AND NOT SSH PASSWORKD (--ask-pass)
+### PUBLIC KEY AND NOT SSH PASSWORKD (--ask-pass)
 
 Instead of hitting everytime the ssh password
 We need to try to connect with the ssh public key
@@ -281,7 +285,7 @@ node01.srv.world
 node01.srv.world
 ```
 
-## BONUS
+### BONUS
 
 To ping all the machines :
 ```bash
